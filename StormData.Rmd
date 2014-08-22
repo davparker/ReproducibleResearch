@@ -3,26 +3,105 @@ title: "NOAA Storm Analysis on Population Health"
 author: "David Parker"
 date: "Friday, August 22, 2014"
 output: html_document
+keep_md: true
 ---
 
-##Synopsis  
+#Synopsis  
 
+Analyzing US Storm Data to demonstrate the human health in areas where damage occurred.
 
-
-##Loading and Processing the Raw Data
+#Loading and Processing the Raw Data
 
 Using [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) from the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database, we analyze conditions that impact the health of human populations throughout the US.
 
-__Downloading and Reading the Data__
+###Data Processing  
 
-```{r}
+###Downloading and reading a small sample of the data for column names and early classification. 
+```{r, echo=TRUE, cache=TRUE}
 temp <- tempfile()
 download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
               temp, method = "auto", mode = "wb")
-sdata <- read.table(bzfile(temp))
+sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",", nrows = 10, 
+                    na.strings = "", )
+dim(sdata)
+# rawnames <- readLines(bzfile(temp), 1)
+cnames <- names(sdata)
+cnames
+cnames <- sub("__", "", cnames, fixed = TRUE)
+cnames
+names(sdata) <- cnames
+head(sdata[1:10], 3)
+head(sdata[11:20], 3)
+head(sdata[21:30], 3)
+head(sdata[31:37], 3)
+str(sdata)
+```
 
-# read.table(bzfile(“StormData.csv.bz2″))
+##Read all the data  
 
+Some of the column classes are not interpreted correctly. Read in a larger chunk of data as character classes then reclassify the columns after examination.  
+
+```{r, echo=TRUE, cache=TRUE}
+sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",", nrows = 1000,
+                    colClasses = "character", na.strings = "", )
+names(sdata) <- cnames
+unique(sdata$STATE)
+unique(sdata$COUNTY)
+unique(sdata$BGN_DATE)
+unique(sdata$BGN_TIME)
+unique(sdata$TIME_ZONE)
+unique(sdata$BGN_AZI)
+unique(sdata$COUNTYENDN)
+unique(sdata$END_LOCATI)
+unique(sdata$WFO)
+unique(sdata$STATEOFFIC)
+unique(sdata$ZONENAMES)
+unique(sdata$PROPDMGEXP)
+unique(sdata$REFNUM)
+head(sdata[1:10])
+head(sdata[11:20])
+head(sdata[21:30])
+head(sdata[31:37])
+dim(sdata)
+# [1] 902297     37
+# 37 cols,  build classes 10 at a time
+cclasses <- c("factor", rep("character", 3), "numeric", "character", rep("factor", 2), "numeric", "factor", 
+              rep("character", 3), "numeric", "character", "numeric", "factor", "character", rep("numeric", 2),
+              "factor", rep("numeric", 4), "character", "numeric", "factor",  rep("character", 2),
+              rep("character", 7))
+cclasses              
+```
+
+__Read entire dataset__
+```{r, echo=TRUE, cache=TRUE}
+sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",",
+                    colClasses = cclasses, 
+                    na.strings = "", )
+names(sdata) <- cnames
+dim(sdata)
+summary(sdata)
+str(sdata)
 unlink(temp)
+````
 
+__Make date fields__
+```{r, echo=TRUE, cache=TRUE}
+# Create date from BGN_DATE with overlapping time fields & concatenate TZ
+sdata$BD1 <- as.POSIXct(sdata$BGN_DATE, format="%m/%d/%Y")
+sdata$BD1
+head(sdata[, c(2:4, 39:40)])
+sdata$BD2 <- as.POSIXct(
+  paste(as.POSIXct(sdata$BD, format="%Y/%m/%d"), sdata$BGN_TIME)
+  ,format="%Y-%m-%d %H%M")
+sdata$BD2
+head(sdata[, c(2:4, 39:41)])
+sdata$BEGIN_DATE <- 
+  as.POSIXct(
+    paste(sdata$BD2, sdata$TIME_ZONE) )
+sdata$BEGIN_DATE
+head(sdata[, c(2:4, 39:42)])
+class(sdata$BEGIN_DATE)             
+str(sdata)
+dim(sdata)
+sdata$BEGIN_DATE[1:6]
 ```
