@@ -1,104 +1,94 @@
 ---
-title: "NOAA Storm Analysis on Population Health" 
+title: "NOAA Storm Data Analysis on Population Health"
 author: "David Parker"
 date: "Friday, August 22, 2014"
 output: html_document
 keep_md: true
 ---
 
-#Synopsis  
+##Introduction
 
-Analyzing US Storm Data to demonstrate the human health in areas where damage occurred.
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
 
-#Loading and Processing the Raw Data
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
 
-Using [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) from the U.S. National Oceanic and Atmospheric Administration’s (NOAA) storm database, we analyze conditions that impact the health of human populations throughout the US.
+##Data
 
-###Data Processing  
+The data for this assignment come in the form of a comma-separated-value file compressed via the bzip2 algorithm to reduce its size. You can download the file from the course web site:
 
-###Downloading and reading a small sample of the data for column names and early classification. 
-```{r, setup, echo=TRUE, cache=TRUE}
-# clear the environment
-rm(list=ls())
-temp <- tempfile()
-download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", 
-              temp, method = "auto", mode = "wb")
-sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",", nrows = 10, 
-                    na.strings = "", )
-dim(sdata)
-cnames <- names(sdata)
+* [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) [47Mb]  
 
-cnames
-cnames <- sub("__", "1", cnames, fixed = TRUE)
-cnames
-names(sdata) <- cnames
-head(sdata[1:10], 3)
-head(sdata[11:20], 3)
-head(sdata[21:30], 3)
-head(sdata[31:37], 3)
-str(sdata)
-```
+There is also some documentation of the database available. Here you will find how some of the variables are constructed/defined.
 
-##Read a bigger chunk of the data  
+* National Weather Service [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
 
-Some of the column classes are not interpreted correctly. Read in a larger chunk of data as character classes then reclassify the columns after examination.  
+* National Climatic Data Center Storm Events [FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
 
-```{r, echo=TRUE, cache=TRUE}
-sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",", nrows = 1000,
-                    colClasses = "character", na.strings = "", )
-names(sdata) <- cnames
-# Examine header with new names
-head(sdata[1:10], 3)
-head(sdata[11:20], 3)
-head(sdata[21:30], 3)
-head(sdata[31:37], 3)
-# 37 cols,  build appropriate column classes 10 at a time
-cclasses <- c("factor", "Date", rep("character", 2), "numeric", "character", rep("factor", 2), "numeric", "factor", 
-              rep("character", 3), "numeric", "character", "numeric", "factor", "character", rep("numeric", 2),
-              "factor", rep("numeric", 4), "character", "numeric", "factor",  rep("character", 2),
-              rep("character", 7))
-cclasses              
-```
+The events in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. More recent years should be considered more complete.
 
-__Read entire dataset__
-```{r, echo=TRUE, cache=TRUE}
-library(Defaults)
-# change default date format for data load
-setDefaults('as.Date.character', format = '%m/%d/%Y')
-sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",",
-                    colClasses = cclasses, na.strings = "")
-names(sdata) <- cnames
-dim(sdata)
-summary(sdata)
-str(sdata)
-# Data is loaded, drop the temp compressed file
-unlink(temp)
-````
+##Assignment
 
-__Make date fields__
-```{r, echo=TRUE, cache=TRUE}
-# compare dates for initial date concatenation
-head(sdata[, c(2:4)])
-sdata$BD <- 
-  as.POSIXct(
-    paste(
-      as.POSIXct(sdata$BGN_DATE, format="%Y/%m/%d")
-      , sdata$BGN_TIME)
-    ,format=  "%Y-%m-%d %H:%M:%S")
+The basic goal of this assignment is to explore the NOAA Storm Database and answer some basic questions about severe weather events. You must use the database to answer the questions below and show the code for your entire analysis. Your analysis can consist of tables, figures, or other summaries. You may use any R package you want to support your analysis.
 
-sdata$BD[1:10]
-# compare dates for time correction
-head(sdata[, c(2:4, 38)])
-# add timezone field and create clean BEGIN_DATE
-sdata$BEGIN_DATE <- 
-  as.POSIXct( paste(sdata$BD, sdata$TIME_ZONE) 
-              , format=  "%Y-%m-%d %H:%M:%S")
-# verify new date column
-sdata$BEGIN_DATE[1:10]
-class(sdata$BEGIN_DATE)
-head(sdata[, c(2:4, 39)])
-# place BEGIN_DATE in appropiate position
-sdata <- sdata[, c(1, 39, 2:37)]
-str(sdata)
-dim(sdata)
-```
+###Questions
+
+Your data analysis must address the following questions:
+
+1. Across the United States, which types of events (as indicated in the ```EVTYPE``` variable) are most harmful with respect to population health?
+
+2. Across the United States, which types of events have the greatest economic consequences?
+
+Consider writing your report as if it were to be read by a government or municipal manager who might be responsible for preparing for severe weather events and will need to prioritize resources for different types of events. However, there is no need to make any specific recommendations in your report.
+
+###Requirements
+
+For this assignment you will need some specific tools
+
+RStudio: You will need RStudio to publish your completed analysis document to RPubs. You can also use RStudio to edit/write your analysis.
+
+knitr: You will need the knitr package in order to compile your R Markdown document and convert it to HTML
+
+###Document Layout
+
+* Language: Your document should be written in English.
+
+* Title: Your document should have a title that __briefly__ summarizes your data analysis
+
+* Synopsis: Immediately after the title, there should be a __synopsis__ which describes and summarizes your analysis in at most __10 complete sentences__.
+
+* There should be a section titled __Data Processing__ which describes (in words and code) how the data were loaded into R and processed for analysis. In particular, your analysis must start from the raw CSV file containing the data. You cannot do any preprocessing outside the document. If preprocessing is time-consuming you may consider using the ```cache = TRUE``` option for certain code chunks.
+
+* There should be a section titled __Results__ in which your results are presented.
+
+* You may have other sections in your analysis, but Data Processing and Results are __required__.
+
+* The analysis document must have __at least one figure containing a plot__.
+
+* Your analyis must have no more than three figures. Figures may have multiple plots in them (i.e. panel plots), but there cannot be __more than three figures total__.
+
+* You must show all your code for the work in your analysis document. This may make the document a bit verbose, but that is okay. In general, you should ensure that ```echo = TRUE``` for every code chunk (this is the default setting in knitr).
+
+###Publishing Your Analysis
+
+For this assignment you will need to publish your analysis on [RPubs.com](http://rpubs.com/). If you do not already have an account, then you will have to create a new account. After you have completed writing your analysis in RStudio, you can publish it to RPubs by doing the following:
+
+1. In RStudio, make sure your R Markdown document (```.Rmd```) document is loaded in the editor
+
+2. Click the ```Knit HTML``` button in the doc toolbar to preview your document.
+
+3. In the preview window, click the ```Publish``` button.
+
+Once your document is published to RPubs, you should get a unique URL to that document. Make a __note of this URL__ as you will need it to submit your assignment.
+
+__NOTE__: If you are having trouble connecting with RPubs due to proxy-related or other issues, you can upload your final analysis document file as a PDF to Coursera instead.
+
+###Submitting Your Assignment
+
+In order to submit this assignment, you must copy the RPubs URL for your completed data analysis document in to the peer assessment question.
+
+Please submit the URL from RPubs that points to your full report for this assignment. 
+
+----
+__NOTE__: The URL for the RPubs document should begin with http:// (not https://)
+
+__NOTE__: If you are having trouble connecting with RPubs due to proxy-related or other issues, you can upload your final analysis document file as a PDF to Coursera instead.
