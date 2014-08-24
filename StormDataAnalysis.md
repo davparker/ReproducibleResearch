@@ -1,4 +1,4 @@
-# NOAA Storm Data Analysis on Population Health
+# NOAA Storm Data Analysis on Population, Property, and Crops
 David Parker  
 Friday, August 22, 2014  
 
@@ -8,7 +8,7 @@ Analyzing NOAA's Storm Data to correlate types of weather events that impact hum
 
 ###Loading and Processing the Raw Data
 
-Using [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) extracted from the U.S. National Oceanic and Atmospheric Administrations (NOAA) storm database.  
+* Using [Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) extracted from the U.S. National Oceanic and Atmospheric Administrations (NOAA) storm database.  
 
 ##Data Processing   
 Download the compressed data into a Temp file then read it in compressed form.  
@@ -300,7 +300,7 @@ summary(sdata)
 unlink(temp)
 ```
 
-__Make date field_
+__Make date field__:  
 
 ```r
 # compare dates for initial date concatenation
@@ -338,52 +338,6 @@ head(sdata[, c(2:4, 38)])
 ```r
 # place BEGIN_DATE in appropiate position
 sdata <- sdata[, c(1, 38, 2:37)]
-str(sdata)
-```
-
-```
-## 'data.frame':	902297 obs. of  38 variables:
-##  $ STATE1    : Factor w/ 70 levels "1.00","10.00",..: 1 1 1 1 1 1 1 1 1 1 ...
-##  $ BEGIN_DATE: POSIXct, format: "1950-04-18 01:30:00" "1950-04-18 01:45:00" ...
-##  $ BGN_DATE  : Date, format: "1950-04-18" "1950-04-18" ...
-##  $ BGN_TIME  : chr  "0130" "0145" "1600" "0900" ...
-##  $ TIME_ZONE : chr  "CST" "CST" "CST" "CST" ...
-##  $ COUNTY    : num  97 3 57 89 43 77 9 123 125 57 ...
-##  $ COUNTYNAME: chr  "MOBILE" "BALDWIN" "FAYETTE" "MADISON" ...
-##  $ STATE     : Factor w/ 72 levels "AK","AL","AM",..: 2 2 2 2 2 2 2 2 2 2 ...
-##  $ EVTYPE    : chr  "TORNADO" "TORNADO" "TORNADO" "TORNADO" ...
-##  $ BGN_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ BGN_AZI   : Factor w/ 34 levels "  N"," NW","E",..: NA NA NA NA NA NA NA NA NA NA ...
-##  $ BGN_LOCATI: chr  NA NA NA NA ...
-##  $ END_DATE  : chr  NA NA NA NA ...
-##  $ END_TIME  : chr  NA NA NA NA ...
-##  $ COUNTY_END: num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ COUNTYENDN: chr  NA NA NA NA ...
-##  $ END_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ END_AZI   : Factor w/ 23 levels "E","ENE","ESE",..: NA NA NA NA NA NA NA NA NA NA ...
-##  $ END_LOCATI: chr  NA NA NA NA ...
-##  $ LENGTH    : num  14 2 0.1 0 0 1.5 1.5 0 3.3 2.3 ...
-##  $ WIDTH     : num  100 150 123 100 150 177 33 33 100 100 ...
-##  $ F         : Factor w/ 6 levels "0","1","2","3",..: 4 3 3 3 3 3 3 2 4 4 ...
-##  $ MAG       : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...
-##  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...
-##  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...
-##  $ PROPDMGEXP: chr  "K" "K" "K" "K" ...
-##  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...
-##  $ CROPDMGEXP: chr  NA NA NA NA ...
-##  $ WFO       : chr  NA NA NA NA ...
-##  $ STATEOFFIC: chr  NA NA NA NA ...
-##  $ ZONENAMES : chr  NA NA NA NA ...
-##  $ LATITUDE  : chr  "3040.00" "3042.00" "3340.00" "3458.00" ...
-##  $ LONGITUDE : chr  "8812.00" "8755.00" "8742.00" "8626.00" ...
-##  $ LATITUDE_E: chr  "3051.00" "0.00" "0.00" "0.00" ...
-##  $ LONGITUDE_: chr  "8806.00" "0.00" "0.00" "0.00" ...
-##  $ REMARKS   : chr  NA NA NA NA ...
-##  $ REFNUM    : chr  "1.00" "2.00" "3.00" "4.00" ...
-```
-
-```r
 dim(sdata)
 ```
 
@@ -393,16 +347,13 @@ dim(sdata)
 
 ```r
 # save sdata during testing
-save(sdata, file = 'sdata.Rdata')
+# save(sdata, file = 'sdata.Rdata')
 ```
 
-__Tidy the data__
+__Tidy the data__:  
 
 ```r
 library(plyr)
-library(reshape2)
-# sd <- sdata
-# sdata <- sd
 etype <- sort(unique(sdata$EVTYPE))
 etype 
 ```
@@ -904,7 +855,7 @@ etype
 ```
 
 ```r
-# clean EVTYPE
+# clean up EVTYPE field
 sdata$EVTYPE <- toupper(sdata$EVTYPE)
 sdata$EVTYPE <- sub("^\\s+", "", sdata$EVTYPE)
 sdata$EVTYPE <- gsub('/', ' ', sdata$EVTYPE)
@@ -1128,6 +1079,7 @@ health[order(-health$SINJURY, -health$SFATAL), ]
 # Create a new Event Type field to better summarize 
 # add an entry for every significant type, init w/'OTHER'
 sdata$TYPE <- "OTHER"
+# load primary TYPES
 sdata[grepl('TORNADO', sdata$EVTYPE),  ]$TYPE <- "TORNADO"
 sdata[grepl('WIND', sdata$EVTYPE),  ]$TYPE <- "WIND"
 sdata[grepl('HEAT', sdata$EVTYPE),  ]$TYPE <- "HEAT"
@@ -1154,7 +1106,6 @@ sdata[grepl('TROPIC', sdata$EVTYPE),  ]$TYPE <- "TROPICAL STORM"
 sdata[grepl('RAIN', sdata$EVTYPE),  ]$TYPE <- "RAIN"
 sdata[grepl('COLD', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('HYPOTH', sdata$EVTYPE),  ]$TYPE <- "COLD"
-sdata[grepl('DROUGHT', sdata$EVTYPE),  ]$TYPE <- "DROUGHT"
 sdata[grepl('FREEZ', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('FROST', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('AVALAN', sdata$EVTYPE),  ]$TYPE <- "AVALANCHE"
@@ -1166,6 +1117,8 @@ sdata[grepl('SURGE', sdata$EVTYPE),  ]$TYPE <- "STORM SURGE"
 sdata[grepl('TSTM', sdata$EVTYPE),  ]$TYPE <- "THUNDERSTORM"
 sdata[grepl('THUNDER', sdata$EVTYPE),  ]$TYPE <- "THUNDERSTORM"
 sdata[grepl('WATERSP', sdata$EVTYPE),  ]$TYPE <- "WATERSPOUT"
+# many DROUGHT combos, override above others in one DROUGHT category
+sdata[grepl('DROUGHT', sdata$EVTYPE),  ]$TYPE <- "DROUGHT"
 # See major TYPES
 type <- sort(unique(sdata$TYPE))
 type 
@@ -1188,20 +1141,18 @@ sdata <- transform(sdata, TYPE = factor(TYPE))
 __Analyze the Tidy data__
 
 ```r
-summary(sdata$BEGIN_DATE)
+# summary(sdata$BEGIN_DATE)
+summary(sdata$BGN_DATE)
 ```
 
 ```
-##                  Min.               1st Qu.                Median 
-## "1950-01-03 11:00:00" "1976-06-11 23:47:15" "1986-08-16 23:22:00" 
-##                  Mean               3rd Qu.                  Max. 
-## "1983-09-06 13:15:08" "1992-09-22 05:37:30" "1995-12-31 20:00:00" 
-##                  NA's 
-##              "653541"
+##         Min.      1st Qu.       Median         Mean      3rd Qu. 
+## "1950-01-03" "1995-04-20" "2002-03-18" "1998-12-27" "2007-07-28" 
+##         Max. 
+## "2011-11-30"
 ```
 
 ```r
-# too many NAs to summarize for date
 # summarize damage estimates for health 
 health <- ddply(sdata, .(TYPE), summarize, 
                 FATALITY=sum(FATALITIES, na.rm = TRUE), INJURY=sum(INJURIES, na.rm = TRUE))
@@ -1238,31 +1189,48 @@ health
 ```
 
 ```r
+healthy <- ddply(sdata, .((format(sdata$BGN_DATE, '%Y')), TYPE), summarize, 
+                FATALITY=sum(FATALITIES, na.rm = TRUE), INJURY=sum(INJURIES, na.rm = TRUE))
+colnames(healthy)[1] <- c("YEAR")
+tail(healthy)
+```
+
+```
+##     YEAR           TYPE FATALITY INJURY
+## 586 2011   THUNDERSTORM       57    387
+## 587 2011        TORNADO      587   6163
+## 588 2011 TROPICAL STORM        4      1
+## 589 2011     WATERSPOUT        0      0
+## 590 2011           WIND       16     49
+## 591 2011 WINTER WEATHER        3      0
+```
+
+```r
 # ready for health analysis results
 
 # now examine property & crop economic damage
-# limit the data frame to only needed columns
-ldata <- sdata[, c(2, 26, 27, 28, 29, 39)]
+# limit the data frame to only needed columns for economic data
+ldata <- sdata[, c(3, 26, 27, 28, 29, 39)]
 summary(ldata)
 ```
 
 ```
-##    BEGIN_DATE                     PROPDMG      PROPDMGEXP       
-##  Min.   :1950-01-03 11:00:00   Min.   :   0   Length:902297     
-##  1st Qu.:1976-06-11 23:47:15   1st Qu.:   0   Class :character  
-##  Median :1986-08-16 23:22:00   Median :   0   Mode  :character  
-##  Mean   :1983-09-06 13:15:08   Mean   :  12                     
-##  3rd Qu.:1992-09-22 05:37:30   3rd Qu.:   0                     
-##  Max.   :1995-12-31 20:00:00   Max.   :5000                     
-##  NA's   :653541                                                 
-##     CROPDMG       CROPDMGEXP                    TYPE       
-##  Min.   :  0.0   Length:902297      THUNDERSTORM  :336818  
-##  1st Qu.:  0.0   Class :character   HAIL          :289281  
-##  Median :  0.0   Mode  :character   FLOOD         : 86073  
-##  Mean   :  1.5                      TORNADO       : 60684  
-##  3rd Qu.:  0.0                      WIND          : 26553  
-##  Max.   :990.0                      WINTER WEATHER: 19693  
-##                                     (Other)       : 83195
+##     BGN_DATE             PROPDMG      PROPDMGEXP           CROPDMG     
+##  Min.   :1950-01-03   Min.   :   0   Length:902297      Min.   :  0.0  
+##  1st Qu.:1995-04-20   1st Qu.:   0   Class :character   1st Qu.:  0.0  
+##  Median :2002-03-18   Median :   0   Mode  :character   Median :  0.0  
+##  Mean   :1998-12-27   Mean   :  12                      Mean   :  1.5  
+##  3rd Qu.:2007-07-28   3rd Qu.:   0                      3rd Qu.:  0.0  
+##  Max.   :2011-11-30   Max.   :5000                      Max.   :990.0  
+##                                                                        
+##   CROPDMGEXP                    TYPE       
+##  Length:902297      THUNDERSTORM  :336818  
+##  Class :character   HAIL          :289281  
+##  Mode  :character   FLOOD         : 86073  
+##                     TORNADO       : 60684  
+##                     WIND          : 26553  
+##                     WINTER WEATHER: 19693  
+##                     (Other)       : 83195
 ```
 
 ```r
@@ -1270,7 +1238,7 @@ names(ldata)
 ```
 
 ```
-## [1] "BEGIN_DATE" "PROPDMG"    "PROPDMGEXP" "CROPDMG"    "CROPDMGEXP"
+## [1] "BGN_DATE"   "PROPDMG"    "PROPDMGEXP" "CROPDMG"    "CROPDMGEXP"
 ## [6] "TYPE"
 ```
 
@@ -1288,32 +1256,27 @@ head(edata,3)
 ```
 
 ```r
-# calculate property damage by multiplier, careful with the messy NAs
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='K']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='K']),]$PROPDMG * 10^3
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='M']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='M']),]$PROPDMG * 10^6
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='B']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='B']),]$PROPDMG * 10^9
-# # calculate crop damage by multiplier
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='K']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='K']),]$CROPDMG * 10^3
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='M']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='M']),]$CROPDMG * 10^6
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='B']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='B']),]$CROPDMG * 10^9
-# # only analyze known large values from above
-# edata <- edata[edata$PROPDMGEXP %in% c('K', 'M', 'B')| 
-#                  edata$CROPDMGEXP %in% c('K', 'M', 'B'), ]
+# examine yearly breakdown
+edatay <- ddply(ldata, .(TYPE, (format(BGN_DATE, '%Y')), PROPDMGEXP, CROPDMGEXP), summarize, 
+              PROPDMG = sum(PROPDMG, na.rm=T), CROPDMG = sum(CROPDMG,na.rm=T))
+colnames(edatay)[2] <- c("YEAR")
+tail(edatay)
+```
 
-# some datas are NA so don't summarize with dates
-# calaculate for crops, property and total
-# damage <- ddply(edata, .(TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
-#                 CROPS = round(sum(CROPDMG)),
-#                 DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
+```
+##                TYPE YEAR PROPDMGEXP CROPDMGEXP  PROPDMG CROPDMG
+## 2144 WINTER WEATHER 2009          M          K    16.00       0
+## 2145 WINTER WEATHER 2010          K          K 12053.30       0
+## 2146 WINTER WEATHER 2010          K          M     0.00      15
+## 2147 WINTER WEATHER 2010          M          K    52.60       0
+## 2148 WINTER WEATHER 2011          K          K 13302.00      70
+## 2149 WINTER WEATHER 2011          M          K     6.75       0
+```
 
+```r
 # Focus on areas where damages are in Billions of dollars
 bdamage <- edata[edata$PROPDMGEXP %in% ('B')|edata$CROPDMGEXP %in% ('B'), ]
+# calaculate damages for crops, property and total in billions
 damage <- ddply(bdamage, .(TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
                CROPS = round(sum(CROPDMG)),
                DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
@@ -1341,6 +1304,51 @@ damage
 ```
 
 ```r
+# Focus on areas by Year where damages are in Billions of dollars
+bdamagey <- edatay[edatay$PROPDMGEXP %in% ('B')|edatay$CROPDMGEXP %in% ('B'), ]
+# calaculate damages for crops, property and total in billions
+damagey <- ddply(bdamagey, .(YEAR, TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
+               CROPS = round(sum(CROPDMG)),
+               DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
+# Damages in Billions
+damagey
+```
+
+```
+##    YEAR           TYPE PROPERTY CROPS DAMAGES
+## 1  1993          FLOOD        5     5      10
+## 2  1993   THUNDERSTORM        2     2       4
+## 3  1993 WINTER WEATHER        5     0       5
+## 4  1994            ICE      500     5     505
+## 5  1995           COLD        0     0       0
+## 6  1995        CYCLONE        3    15      18
+## 7  1995        DROUGHT        0     0       0
+## 8  1995           HEAT        0     0       0
+## 9  1995           RAIN        2     0       2
+## 10 1995   THUNDERSTORM        1     0       1
+## 11 1997          FLOOD        3     0       3
+## 12 1998        CYCLONE        2   301     303
+## 13 1999        CYCLONE        3   500     503
+## 14 2000           FIRE        2     0       2
+## 15 2001 TROPICAL STORM        5     0       5
+## 16 2003           FIRE        1     6       7
+## 17 2003          FLOOD        1     0       1
+## 18 2004        CYCLONE       17   428     445
+## 19 2004           WIND        1     0       1
+## 20 2005        CYCLONE       49   302     351
+## 21 2005    STORM SURGE       43     0      43
+## 22 2006        DROUGHT        0     1       1
+## 23 2006          FLOOD      115    32     147
+## 24 2008        CYCLONE        1     0       1
+## 25 2008    STORM SURGE        4     0       4
+## 26 2010          FLOOD        2     1       3
+## 27 2010           HAIL        2     0       2
+## 28 2011        DROUGHT        0     0       0
+## 29 2011          FLOOD        3     0       3
+## 30 2011        TORNADO        5     0       5
+```
+
+```r
 # ready for results
 ```
 
@@ -1350,7 +1358,7 @@ damage
 
 ```r
 library(ggplot2)
-# plot health effects
+# plot summary health effects 
 health2 <- health[health$FATALITY > 0 & health$INJURY > 0, ]
 health2$TYPE <- factor(health$TYPE, levels=health[order(health$FATALITY), "TYPE"])
 
@@ -1360,21 +1368,20 @@ h <- h + scale_fill_gradient(low="green",high="darkgreen")
 h <- h + labs(title = 'Fatalies & Injuries due to Weather Events')
 h <- h + xlab('Weather Event Type (Sort on Fatality)')
 h <- h + ylab('Injury Tallies (Fatalities in Red)')
-h <- h + geom_text(size=6,  angle = 15, color='red', aes(label=FATALITY)) 
+h <- h + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=FATALITY)) 
 print(h)
 ```
 
 ![plot of chunk results_health](./StormDataAnalysis_files/figure-html/results_health.png) 
+
 Tornadoes are far and away the most significant threat in terms of injury and loss of life.  
 
 
 ```r
-# plot property & crop damages
+# plot summary property & crop damages
 damage <- damage[order(-damage$DAMAGES), ]
-# take tthe top 5
-damage2 <- damage
-# bdamage3 <- ddply(bdamage2, .(TYPE), summarize, PROPERTY = (PROPERTY/1000000000),
-#                  DAMAGESS = (DAMAGES/1000000000), CROPS = (CROPS/1000000000))
+# plot DAMAGES >= 1 billion 
+damage2 <- damage[damage$DAMAGES >= 1, ]
 damage2$TYPE <- factor(damage2$TYPE, levels=damage2[order(damage2$PROPERTY), "TYPE"])
 
 e <- ggplot(damage2, aes(y = DAMAGES,  x = TYPE,  fill = PROPERTY)) + coord_flip()
@@ -1384,9 +1391,10 @@ e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather
                                  atop(italic('(Property in Red Numbers)'), ""))))
 e <- e + xlab('Weather Event Type (Sort on Property)')
 e <- e + ylab('Total Economic to Property & Crops Damage in Billions')
-e <- e + geom_text(size=6,  angle = 15, color='red', aes(label=PROPERTY)) 
+e <- e + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=PROPERTY)) 
 print(e)
 ```
 
 ![plot of chunk results_damage](./StormDataAnalysis_files/figure-html/results_damage.png) 
+
 Cyclones (Hurricanes and Tropical Cyclones) generate the most total losses for property and crops combined, but most of this damage is to crops. The types are sorted in terms of damage to property indicating that ice and flooding are a greater threat to property followed by cyclones.

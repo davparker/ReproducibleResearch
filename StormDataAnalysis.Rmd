@@ -1,5 +1,5 @@
 ---
-title: "NOAA Storm Data Analysis on Population Health"
+title: "NOAA Storm Data Analysis on Population, Property, and Crops"
 author: "David Parker"
 date: "Friday, August 22, 2014"
 output:
@@ -71,10 +71,9 @@ sdata$BEGIN_DATE <-
 head(sdata[, c(2:4, 38)])
 # place BEGIN_DATE in appropiate position
 sdata <- sdata[, c(1, 38, 2:37)]
-str(sdata)
 dim(sdata)
 # save sdata during testing
-save(sdata, file = 'sdata.Rdata')
+# save(sdata, file = 'sdata.Rdata')
 ```
 
 __Tidy the data__:  
@@ -97,6 +96,7 @@ health[order(-health$SINJURY, -health$SFATAL), ]
 # Create a new Event Type field to better summarize 
 # add an entry for every significant type, init w/'OTHER'
 sdata$TYPE <- "OTHER"
+# load primary TYPES
 sdata[grepl('TORNADO', sdata$EVTYPE),  ]$TYPE <- "TORNADO"
 sdata[grepl('WIND', sdata$EVTYPE),  ]$TYPE <- "WIND"
 sdata[grepl('HEAT', sdata$EVTYPE),  ]$TYPE <- "HEAT"
@@ -123,7 +123,6 @@ sdata[grepl('TROPIC', sdata$EVTYPE),  ]$TYPE <- "TROPICAL STORM"
 sdata[grepl('RAIN', sdata$EVTYPE),  ]$TYPE <- "RAIN"
 sdata[grepl('COLD', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('HYPOTH', sdata$EVTYPE),  ]$TYPE <- "COLD"
-sdata[grepl('DROUGHT', sdata$EVTYPE),  ]$TYPE <- "DROUGHT"
 sdata[grepl('FREEZ', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('FROST', sdata$EVTYPE),  ]$TYPE <- "COLD"
 sdata[grepl('AVALAN', sdata$EVTYPE),  ]$TYPE <- "AVALANCHE"
@@ -135,6 +134,8 @@ sdata[grepl('SURGE', sdata$EVTYPE),  ]$TYPE <- "STORM SURGE"
 sdata[grepl('TSTM', sdata$EVTYPE),  ]$TYPE <- "THUNDERSTORM"
 sdata[grepl('THUNDER', sdata$EVTYPE),  ]$TYPE <- "THUNDERSTORM"
 sdata[grepl('WATERSP', sdata$EVTYPE),  ]$TYPE <- "WATERSPOUT"
+# many DROUGHT combos, override above others in one DROUGHT category
+sdata[grepl('DROUGHT', sdata$EVTYPE),  ]$TYPE <- "DROUGHT"
 # See major TYPES
 type <- sort(unique(sdata$TYPE))
 type 
@@ -143,57 +144,50 @@ sdata <- transform(sdata, TYPE = factor(TYPE))
 
 __Analyze the Tidy data__
 ```{r analyze_data,echo=TRUE,cache=TRUE}
-summary(sdata$BEGIN_DATE)
-
-# too many NAs to summarize for date
+# summary(sdata$BEGIN_DATE)
+summary(sdata$BGN_DATE)
 # summarize damage estimates for health 
 health <- ddply(sdata, .(TYPE), summarize, 
                 FATALITY=sum(FATALITIES, na.rm = TRUE), INJURY=sum(INJURIES, na.rm = TRUE))
 health
+healthy <- ddply(sdata, .((format(sdata$BGN_DATE, '%Y')), TYPE), summarize, 
+                FATALITY=sum(FATALITIES, na.rm = TRUE), INJURY=sum(INJURIES, na.rm = TRUE))
+colnames(healthy)[1] <- c("YEAR")
+tail(healthy)
 # ready for health analysis results
 
 # now examine property & crop economic damage
-# limit the data frame to only needed columns
-ldata <- sdata[, c(2, 26, 27, 28, 29, 39)]
+# limit the data frame to only needed columns for economic data
+ldata <- sdata[, c(3, 26, 27, 28, 29, 39)]
 summary(ldata)
 names(ldata)
 edata <- ddply(ldata, .(TYPE, PROPDMGEXP, CROPDMGEXP), summarize, 
               PROPDMG = sum(PROPDMG, na.rm=T), CROPDMG = sum(CROPDMG,na.rm=T))
 head(edata,3)
-
-# calculate property damage by multiplier, careful with the messy NAs
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='K']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='K']),]$PROPDMG * 10^3
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='M']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='M']),]$PROPDMG * 10^6
-# edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='B']),]$PROPDMG <- 
-#   edata[!is.na(edata$PROPDMG[edata$PROPDMGEXP=='B']),]$PROPDMG * 10^9
-# # calculate crop damage by multiplier
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='K']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='K']),]$CROPDMG * 10^3
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='M']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='M']),]$CROPDMG * 10^6
-# edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='B']),]$CROPDMG <- 
-#   edata[!is.na(edata$CROPDMG[edata$CROPDMGEXP=='B']),]$CROPDMG * 10^9
-# # only analyze known large values from above
-# edata <- edata[edata$PROPDMGEXP %in% c('K', 'M', 'B')| 
-#                  edata$CROPDMGEXP %in% c('K', 'M', 'B'), ]
-
-# some datas are NA so don't summarize with dates
-# calaculate for crops, property and total
-# damage <- ddply(edata, .(TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
-#                 CROPS = round(sum(CROPDMG)),
-#                 DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
+# examine yearly breakdown
+edatay <- ddply(ldata, .(TYPE, (format(BGN_DATE, '%Y')), PROPDMGEXP, CROPDMGEXP), summarize, 
+              PROPDMG = sum(PROPDMG, na.rm=T), CROPDMG = sum(CROPDMG,na.rm=T))
+colnames(edatay)[2] <- c("YEAR")
+tail(edatay)
 
 # Focus on areas where damages are in Billions of dollars
 bdamage <- edata[edata$PROPDMGEXP %in% ('B')|edata$CROPDMGEXP %in% ('B'), ]
+# calaculate damages for crops, property and total in billions
 damage <- ddply(bdamage, .(TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
                CROPS = round(sum(CROPDMG)),
                DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
 # Damages in Billions
 damage
-# ready for results
 
+# Focus on areas by Year where damages are in Billions of dollars
+bdamagey <- edatay[edatay$PROPDMGEXP %in% ('B')|edatay$CROPDMGEXP %in% ('B'), ]
+# calaculate damages for crops, property and total in billions
+damagey <- ddply(bdamagey, .(YEAR, TYPE), summarize, PROPERTY = round(sum(PROPDMG)),
+               CROPS = round(sum(CROPDMG)),
+               DAMAGES = (round(sum(PROPDMG)) + round(sum(CROPDMG))))
+# Damages in Billions
+damagey
+# ready for results
 ```
 
 
@@ -201,7 +195,7 @@ damage
 
 ```{r results_health,echo=TRUE,cache=TRUE}
 library(ggplot2)
-# plot health effects
+# plot summary health effects 
 health2 <- health[health$FATALITY > 0 & health$INJURY > 0, ]
 health2$TYPE <- factor(health$TYPE, levels=health[order(health$FATALITY), "TYPE"])
 
@@ -211,17 +205,17 @@ h <- h + scale_fill_gradient(low="green",high="darkgreen")
 h <- h + labs(title = 'Fatalies & Injuries due to Weather Events')
 h <- h + xlab('Weather Event Type (Sort on Fatality)')
 h <- h + ylab('Injury Tallies (Fatalities in Red)')
-h <- h + geom_text(size=3,  angle = 15, color='red', aes(label=FATALITY)) 
+h <- h + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=FATALITY)) 
 print(h)
 ```   
 
 Tornadoes are far and away the most significant threat in terms of injury and loss of life.  
 
 ```{r results_damage,echo=TRUE,cache=TRUE}
-# plot property & crop damages
+# plot summary property & crop damages
 damage <- damage[order(-damage$DAMAGES), ]
-# take the top 12
-damage2 <- damage[1:12]
+# plot DAMAGES >= 1 billion 
+damage2 <- damage[damage$DAMAGES >= 1, ]
 damage2$TYPE <- factor(damage2$TYPE, levels=damage2[order(damage2$PROPERTY), "TYPE"])
 
 e <- ggplot(damage2, aes(y = DAMAGES,  x = TYPE,  fill = PROPERTY)) + coord_flip()
@@ -231,7 +225,7 @@ e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather
                                  atop(italic('(Property in Red Numbers)'), ""))))
 e <- e + xlab('Weather Event Type (Sort on Property)')
 e <- e + ylab('Total Economic to Property & Crops Damage in Billions')
-e <- e + geom_text(size=3,  angle = 15, color='red', aes(label=PROPERTY)) 
+e <- e + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=PROPERTY)) 
 print(e)
 ```  
 
