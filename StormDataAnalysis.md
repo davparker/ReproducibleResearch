@@ -30,7 +30,6 @@ dim(sdata)
 
 ```r
 cnames <- names(sdata)
-
 cnames
 ```
 
@@ -1365,7 +1364,7 @@ health2$TYPE <- factor(health$TYPE, levels=health[order(health$FATALITY), "TYPE"
 h <- ggplot(health2, aes(y = INJURY,  x = TYPE, fill = FATALITY)) + coord_flip()
 h <- h + geom_bar(stat = 'identity', binwidth = 2) 
 h <- h + scale_fill_gradient(low="green",high="darkgreen")
-h <- h + labs(title = 'Fatalies & Injuries due to Weather Events')
+h <- h + labs(title = 'Fatalies & Injuries due to Weather Events (1950 - 2011)')
 h <- h + xlab('Weather Event Type (Sort on Fatality)')
 h <- h + ylab('Injury Tallies (Fatalities in Red)')
 h <- h + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=FATALITY)) 
@@ -1387,8 +1386,8 @@ damage2$TYPE <- factor(damage2$TYPE, levels=damage2[order(damage2$PROPERTY), "TY
 e <- ggplot(damage2, aes(y = DAMAGES,  x = TYPE,  fill = PROPERTY)) + coord_flip()
 e <- e + geom_bar(stat = 'identity', binwidth = 1) 
 e <- e + scale_fill_gradient(low="green",high="darkgreen")
-e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events', 
-                                 atop(italic('(Property in Red Numbers)'), ""))))
+e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events ', 
+                                 atop(italic('Years 1993 to 2011 (Property in Red Numbers)'), ""))))
 e <- e + xlab('Weather Event Type (Sort on Property)')
 e <- e + ylab('Total Economic to Property & Crops Damage in Billions')
 e <- e + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=PROPERTY)) 
@@ -1398,3 +1397,56 @@ print(e)
 ![plot of chunk results_damage](./StormDataAnalysis_files/figure-html/results_damage.png) 
 
 Cyclones (Hurricanes and Tropical Cyclones) generate the most total losses for property and crops combined, but most of this damage is to crops. The types are sorted in terms of damage to property indicating that ice and flooding are a greater threat to property followed by cyclones.
+
+
+```r
+# plot summary property & crop damages
+damagey <- damagey[order(damagey$YEAR, -damagey$DAMAGES), ]
+# plot DAMAGES >= 1 billion 
+damagey2 <- damagey[damagey$DAMAGES >= 1, ]
+damagey2
+```
+
+```
+##    YEAR           TYPE PROPERTY CROPS DAMAGES
+## 1  1993          FLOOD        5     5      10
+## 3  1993 WINTER WEATHER        5     0       5
+## 2  1993   THUNDERSTORM        2     2       4
+## 4  1994            ICE      500     5     505
+## 6  1995        CYCLONE        3    15      18
+## 9  1995           RAIN        2     0       2
+## 10 1995   THUNDERSTORM        1     0       1
+## 11 1997          FLOOD        3     0       3
+## 12 1998        CYCLONE        2   301     303
+## 13 1999        CYCLONE        3   500     503
+## 14 2000           FIRE        2     0       2
+## 15 2001 TROPICAL STORM        5     0       5
+## 16 2003           FIRE        1     6       7
+## 17 2003          FLOOD        1     0       1
+## 18 2004        CYCLONE       17   428     445
+## 19 2004           WIND        1     0       1
+## 20 2005        CYCLONE       49   302     351
+## 21 2005    STORM SURGE       43     0      43
+## 23 2006          FLOOD      115    32     147
+## 22 2006        DROUGHT        0     1       1
+## 25 2008    STORM SURGE        4     0       4
+## 24 2008        CYCLONE        1     0       1
+## 26 2010          FLOOD        2     1       3
+## 27 2010           HAIL        2     0       2
+## 30 2011        TORNADO        5     0       5
+## 29 2011          FLOOD        3     0       3
+```
+
+```r
+e <- ggplot(damagey2, aes(y = DAMAGES,  x = YEAR,  fill = TYPE)) 
+e <- e + geom_bar(stat = 'identity', binwidth = 1) 
+e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events', 
+                                 atop(italic('In Billions of Dollars (Years 1993 to 2011)'), ""))))
+e <- e + xlab('Year (Damage in Billions)') + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+e <- e + ylab('Total Economic Damage')
+print(e)
+```
+
+![plot of chunk results_damage_year](./StormDataAnalysis_files/figure-html/results_damage_year.png) 
+  
+Major weather events have Significant impact in damages to crops and property.  

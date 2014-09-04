@@ -27,7 +27,6 @@ sdata <- read.table(bzfile(temp), comment.char = "#", header = TRUE, sep = ",", 
                     na.strings = "", )
 dim(sdata)
 cnames <- names(sdata)
-
 cnames
 cnames <- sub("__", "1", cnames, fixed = TRUE)
 cnames
@@ -202,7 +201,7 @@ health2$TYPE <- factor(health$TYPE, levels=health[order(health$FATALITY), "TYPE"
 h <- ggplot(health2, aes(y = INJURY,  x = TYPE, fill = FATALITY)) + coord_flip()
 h <- h + geom_bar(stat = 'identity', binwidth = 2) 
 h <- h + scale_fill_gradient(low="green",high="darkgreen")
-h <- h + labs(title = 'Fatalies & Injuries due to Weather Events')
+h <- h + labs(title = 'Fatalies & Injuries due to Weather Events (1950 - 2011)')
 h <- h + xlab('Weather Event Type (Sort on Fatality)')
 h <- h + ylab('Injury Tallies (Fatalities in Red)')
 h <- h + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=FATALITY)) 
@@ -221,8 +220,8 @@ damage2$TYPE <- factor(damage2$TYPE, levels=damage2[order(damage2$PROPERTY), "TY
 e <- ggplot(damage2, aes(y = DAMAGES,  x = TYPE,  fill = PROPERTY)) + coord_flip()
 e <- e + geom_bar(stat = 'identity', binwidth = 1) 
 e <- e + scale_fill_gradient(low="green",high="darkgreen")
-e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events', 
-                                 atop(italic('(Property in Red Numbers)'), ""))))
+e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events ', 
+                                 atop(italic('Years 1993 to 2011 (Property in Red Numbers)'), ""))))
 e <- e + xlab('Weather Event Type (Sort on Property)')
 e <- e + ylab('Total Economic to Property & Crops Damage in Billions')
 e <- e + geom_text(size=3,  angle = 15, color='red', hjust=-0.5, vjust=0, aes(label=PROPERTY)) 
@@ -230,3 +229,20 @@ print(e)
 ```  
 
 Cyclones (Hurricanes and Tropical Cyclones) generate the most total losses for property and crops combined, but most of this damage is to crops. The types are sorted in terms of damage to property indicating that ice and flooding are a greater threat to property followed by cyclones.
+
+```{r results_damage_year,echo=TRUE,cache=TRUE}
+# plot summary property & crop damages
+damagey <- damagey[order(damagey$YEAR, -damagey$DAMAGES), ]
+# plot DAMAGES >= 1 billion 
+damagey2 <- damagey[damagey$DAMAGES >= 1, ]
+damagey2
+e <- ggplot(damagey2, aes(y = DAMAGES,  x = YEAR,  fill = TYPE)) 
+e <- e + geom_bar(stat = 'identity', binwidth = 1) 
+e <- e + ggtitle(expression(atop('Property & Crop Economic Losses due to Weather Events', 
+                                 atop(italic('In Billions of Dollars (Years 1993 to 2011)'), ""))))
+e <- e + xlab('Year (Damage in Billions)') + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+e <- e + ylab('Total Economic Damage')
+print(e)
+```   
+  
+Major weather events have Significant impact in damages to crops and property.  
